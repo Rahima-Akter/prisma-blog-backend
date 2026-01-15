@@ -1,59 +1,73 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
   provider = "prisma-client"
-  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+  url = process.env.DATABASE_URL
 }
 
-enum PostStatus {
-  DRAFT
-  PUBLISHED
-  ARCHIVED
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  @@unique([email])
+  @@map("user")
 }
 
-model Post {
-  id         String     @id @default(uuid())
-  title      String     @db.VarChar(100)
-  content    String     @db.Text
-  thumbnail  String?
-  isFeatured Boolean    @default(false)
-  status     PostStatus @default(PUBLISHED)
-  tags       String[]
-  views      Int        @default(0)
-  authorId   String // better auth will provide
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  comments   Comments[]
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([authorId]) // this will help to find all the posts posted by the author
-  @@map("posts") // this will change the table name to posts on the db but here the model name won't change
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
 }
 
-enum CommentStatus {
-  APPROVED
-  REJECT
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
 }
 
-model Comments {
-  id              String        @id @default(uuid())
-  comment         String        @db.Text
-  userId          String
-  postId          String
-  post            Post          @relation(fields: [postId], references: [id])
-  commentParentId String?
-  commentParent   Comments?     @relation("CommentReplies", fields: [commentParentId], references: [id])
-  replies         Comments[]    @relation("CommentReplies")
-  status          CommentStatus @default(APPROVED)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  @@index([postId, userId]) // to get all comments for a post
+  @@index([identifier])
+  @@map("verification")
 }

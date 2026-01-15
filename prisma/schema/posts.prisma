@@ -1,0 +1,23 @@
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Post {
+  id         String     @id @default(uuid())
+  title      String     @db.VarChar(100)
+  content    String     @db.Text
+  thumbnail  String?
+  isFeatured Boolean    @default(false)
+  status     PostStatus @default(PUBLISHED)
+  tags       String[]
+  views      Int        @default(0)
+  authorId   String // better auth will provide
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  comments   Comments[]
+
+  @@index([authorId]) // this will help to find all the posts posted by the author
+  @@map("posts") // this will change the table name to posts on the db but here the model name won't change
+}

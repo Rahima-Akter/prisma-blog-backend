@@ -1,0 +1,20 @@
+enum CommentStatus {
+    APPROVED
+    REJECT
+}
+
+model Comments {
+    id              String        @id @default(uuid())
+    comment         String        @db.Text
+    userId          String
+    postId          String
+    post            Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+    commentParentId String?
+    commentParent   Comments?     @relation("CommentReplies", fields: [commentParentId], references: [id], onDelete: Cascade)
+    replies         Comments[]    @relation("CommentReplies")
+    status          CommentStatus @default(APPROVED)
+    createdAt       DateTime      @default(now())
+    updatedAt       DateTime      @updatedAt
+
+    @@index([postId, userId]) // to get all comments for a post
+}
