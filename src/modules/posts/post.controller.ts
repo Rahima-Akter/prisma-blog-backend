@@ -1,6 +1,41 @@
 import { Request, Response } from "express";
 import { postService } from "./post.service";
 
+const getAllPosts = async (req: Request, res: Response) => {
+  try {
+    const { searchQuery } = req.query;
+    const isFeatured = req.query.isFeatured
+      ? req.query.isFeatured === "true"
+        ? true
+        : req.query.isFeatured === "false"
+        ? false
+        : undefined
+      : undefined;
+
+    const  tags = req.query.tags? (req.query.tags as string).split(",") : [];
+
+    // console.log({ isFeatured });
+
+    const result = await postService.getAllPosts(searchQuery as string, tags, isFeatured as boolean);
+
+    if (!result.length) {
+      res.status(204).json({
+        msg: "There are not data to show!",
+      });
+    }
+
+    res.status(200).json({
+      msg: "Posts fetched successfully",
+      data: result,
+    });
+  } catch (err) {
+    res.status(404).json({
+      msg: "Faild to fetch posts",
+      error: err,
+    });
+  }
+};
+
 const getPostById = async (req: Request, res: Response) => {
   try {
     const { postId } = req.params;
@@ -47,28 +82,6 @@ const getPostByUser = async (req: Request, res: Response) => {
 
     if (!result.length) {
       return res.status(204).json({
-        msg: "There are not data to show!",
-      });
-    }
-
-    res.status(200).json({
-      msg: "Posts fetched successfully",
-      data: result,
-    });
-  } catch (err) {
-    res.status(404).json({
-      msg: "Faild to fetch posts",
-      error: err,
-    });
-  }
-};
-
-const getAllPosts = async (req: Request, res: Response) => {
-  try {
-    const result = await postService.getAllPosts();
-
-    if (!result.length) {
-      res.status(204).json({
         msg: "There are not data to show!",
       });
     }

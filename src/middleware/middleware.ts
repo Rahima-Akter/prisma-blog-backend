@@ -22,40 +22,44 @@ export enum userRole {
 
 const middleware = (...roles: userRole[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    // get logged-in user session
-    const session = await auth.api.getSession({
-      headers: req.headers as any,
-    });
-    // console.log(session);
-    if (!session) {
-      res.status(401).json({
-        success: false,
-        msg: "You are not authorized!",
+    try {
+      // get logged-in user session
+      const session = await auth.api.getSession({
+        headers: req.headers as any,
       });
-    }
-    if (!session?.user.emailVerified) {
-      res.status(403).json({
-        success: false,
-        msg: "Please Verify Your Email First!",
-      });
-    }
+      // console.log(session);
+      if (!session) {
+        res.status(401).json({
+          success: false,
+          msg: "You are not authorized!",
+        });
+      }
+      if (!session?.user.emailVerified) {
+        res.status(403).json({
+          success: false,
+          msg: "Please Verify Your Email First!",
+        });
+      }
 
-    req.user = {
-      id: session?.user.id as string,
-      name: session?.user.name as string,
-      email: session?.user.email as string,
-      role: session?.user.role as string,
-      emailVerified: session?.user.emailVerified as boolean,
-    };
+      req.user = {
+        id: session?.user.id as string,
+        name: session?.user.name as string,
+        email: session?.user.email as string,
+        role: session?.user.role as string,
+        emailVerified: session?.user.emailVerified as boolean,
+      };
 
-    if (!roles.length && roles.includes(req.user?.role as userRole)) {
-      res.status(403).json({
-        success: false,
-        msg: "Forbidden! You don't have permission",
-      });
+      if (!roles.length && roles.includes(req.user?.role as userRole)) {
+        res.status(403).json({
+          success: false,
+          msg: "Forbidden! You don't have permission",
+        });
+      }
+
+      next();
+    } catch (err) {
+      next(err);
     }
-
-    next()
   };
 };
 
