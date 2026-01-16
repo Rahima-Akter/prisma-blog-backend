@@ -16,8 +16,10 @@ const getAllPosts = async (req: Request, res: Response) => {
     const status = req.query.status as PostStatus | undefined;
     const tags = req.query.tags ? (req.query.tags as string).split(",") : [];
     const page = Number(req.query.page ?? 1);
-    const limit = Number(req.query.limit ?? 5);
+    const limit = Number(req.query.limit ?? 20);
     const skip = (page - 1) * limit;
+    const sortBy = req.query.sortBy as string | undefined;
+    const sortOrder = req.query.sortOrder as string | undefined;
 
     // console.log({ isFeatured });
 
@@ -28,7 +30,9 @@ const getAllPosts = async (req: Request, res: Response) => {
       status,
       page,
       limit,
-      skip
+      skip,
+      sortBy,
+      sortOrder
     );
 
     if (!result.length) {
