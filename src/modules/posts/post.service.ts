@@ -1,11 +1,15 @@
-import { Post } from "../../../generated/prisma/client";
+import { Post, PostStatus } from "../../../generated/prisma/client";
 import { PostWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
 
 const getAllPosts = async (
   searchQuery: string | undefined,
   tags: string[],
-  isFeatured: boolean
+  isFeatured: boolean,
+  status: PostStatus | undefined,
+  page: number,
+  limit: number,
+  skip: number
 ) => {
   const andQuery: PostWhereInput[] = [];
   if (searchQuery) {
@@ -39,7 +43,15 @@ const getAllPosts = async (
     });
   }
 
+  if (status) {
+    andQuery.push({
+      status,
+    });
+  }
+
   return await prisma.post.findMany({
+    take: limit,
+    skip,
     where: {
       AND: andQuery,
     },
