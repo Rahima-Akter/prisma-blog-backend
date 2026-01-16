@@ -10,8 +10,8 @@ const getAllPosts = async (
   page: number,
   limit: number,
   skip: number,
-  sortBy: string | undefined,
-  sortOrder: string | undefined
+  sortBy: string,
+  sortOrder: string 
 ) => {
   const andQuery: PostWhereInput[] = [];
   if (searchQuery) {
@@ -51,12 +51,12 @@ const getAllPosts = async (
     });
   }
 
-  let orderBy: any = {createdAt: 'desc'}
-  if(sortBy && sortOrder){
-    orderBy = {
-      [sortBy]: sortOrder
-    }
-  }
+  // let orderBy: any = {createdAt: 'desc'}
+  // if(sortBy && sortOrder){
+  //   orderBy = {
+  //     [sortBy]: sortOrder
+  //   }
+  // }
 
   return await prisma.post.findMany({
     take: limit,
@@ -64,7 +64,9 @@ const getAllPosts = async (
     where: {
       AND: andQuery,
     },
-    orderBy
+    orderBy: {
+      [sortBy]: sortOrder
+    }
   });
 };
 
