@@ -29,13 +29,13 @@ const middleware = (...roles: userRole[]) => {
       });
       // console.log(session);
       if (!session) {
-        res.status(401).json({
+        return res.status(401).json({
           success: false,
           msg: "You are not authorized!",
         });
       }
       if (!session?.user.emailVerified) {
-        res.status(403).json({
+        return res.status(403).json({
           success: false,
           msg: "Please Verify Your Email First!",
         });
@@ -45,12 +45,12 @@ const middleware = (...roles: userRole[]) => {
         id: session?.user.id as string,
         name: session?.user.name as string,
         email: session?.user.email as string,
-        role: session?.user.role as string,
+        role: session?.user.role?.toLocaleUpperCase() as userRole,
         emailVerified: session?.user.emailVerified as boolean,
       };
 
-      if (!roles.length && roles.includes(req.user?.role as userRole)) {
-        res.status(403).json({
+      if (roles.length && !roles.includes(req.user?.role as userRole)) {
+        return res.status(403).json({
           success: false,
           msg: "Forbidden! You don't have permission",
         });

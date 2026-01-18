@@ -1,3 +1,4 @@
+import { CommentStatus } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
 
 const createComment = async (payLoad: {
@@ -55,7 +56,33 @@ const updateComment = async (commentId: string, comment: string) => {
   });
 };
 
+const updateComentStatus = async (commentId: string, status: CommentStatus) => {
+  const currentStatus = await prisma.comments.findUniqueOrThrow({
+    where: {
+      id: commentId,
+    },
+    select: {
+      id: true,
+      status: true,
+    },
+  });
+
+  if (currentStatus.status === status) {
+    throw new Error(`your provided status is same as the current status!`);
+  }
+
+  return await prisma.comments.update({
+    where: {
+      id: commentId,
+    },
+    data: {
+      status,
+    },
+  });
+};
+
 export const commentService = {
   createComment,
   updateComment,
+  updateComentStatus,
 };

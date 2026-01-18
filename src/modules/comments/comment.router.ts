@@ -4,7 +4,20 @@ import middleware, { userRole } from "../../middleware/middleware";
 
 const router = Router();
 
-router.post("/", middleware(userRole.USER, userRole.ADMIN), commentController.createComment);
-router.patch("/:commentId", middleware(userRole.USER, userRole.ADMIN), commentController.updateComment);
+router.post(
+  "/",
+  middleware(userRole.USER, userRole.ADMIN),
+  commentController.createComment,
+);
+router.patch(
+  "/:commentId",
+  middleware(userRole.USER, userRole.ADMIN),
+  commentController.updateComment,
+);
+router.patch(
+  "/:commentId/status",
+  middleware(userRole.ADMIN),
+  commentController.updateComentStatus,
+);
 
 export const commentRouter = router;

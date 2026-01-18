@@ -29,7 +29,7 @@ const createComment = async (req: Request, res: Response) => {
 const updateComment = async (req: Request, res: Response) => {
   try {
     const commentId = req.params.commentId;
-    const {comment} = req.body;
+    const { comment } = req.body;
 
     if (!commentId) {
       return res.status(403).json({
@@ -52,7 +52,35 @@ const updateComment = async (req: Request, res: Response) => {
   }
 };
 
+const updateComentStatus = async (req: Request, res: Response) => {
+  try {
+    const commentId = req.params.commentId;
+    const { status } = req.body;
+    // console.log({status, commentId})
+
+    if (!commentId) {
+      return res.status(403).json({
+        success: false,
+        msg: `Comment ID: ${commentId} NOT FOUND!`,
+      });
+    }
+
+    const result = await commentService.updateComentStatus(commentId, status);
+    res.status(200).json({
+      msg: "Comment Status Updated Successfully",
+      data: result,
+    });
+  } catch (err) {
+    // console.error(err);
+    return res.status(500).json({
+      msg: "Error updating Comment Status",
+      error: err,
+    });
+  }
+};
+
 export const commentController = {
   createComment,
   updateComment,
+  updateComentStatus,
 };

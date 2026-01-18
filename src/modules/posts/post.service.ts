@@ -82,6 +82,13 @@ const getAllPosts = async (
             where: {
               status: CommentStatus.APPROVED,
             },
+            include: {
+              replies: {
+                where: {
+                  status: CommentStatus.APPROVED,
+                },
+              },
+            },
           },
         },
       },
