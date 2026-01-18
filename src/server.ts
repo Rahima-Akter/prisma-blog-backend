@@ -4,6 +4,7 @@ import { prisma } from "./lib/prisma";
 import router from "./modules/posts/post.router";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
+import { commentRouter } from "./modules/comments/comment.router";
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -15,6 +16,7 @@ app.all('/api/auth/*splat', toNodeHandler(auth));
 app.use(express.json());
 
 app.use("/post", router);
+app.use("/comments", commentRouter);
 
 
 

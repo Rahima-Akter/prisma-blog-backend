@@ -1,4 +1,8 @@
-import { Post, PostStatus } from "../../../generated/prisma/client";
+import {
+  CommentStatus,
+  Post,
+  PostStatus,
+} from "../../../generated/prisma/client";
 import { PostWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
 
@@ -11,7 +15,7 @@ const getAllPosts = async (
   limit: number,
   skip: number,
   sortBy: string,
-  sortOrder: string 
+  sortOrder: string,
 ) => {
   const andQuery: PostWhereInput[] = [];
   if (searchQuery) {
@@ -58,16 +62,44 @@ const getAllPosts = async (
   //   }
   // }
 
-  return await prisma.post.findMany({
+  const result = await prisma.post.findMany({
     take: limit,
     skip,
     where: {
       AND: andQuery,
     },
     orderBy: {
-      [sortBy]: sortOrder
-    }
+      [sortBy]: sortOrder,
+    },
+    include: {
+      comments: {
+        where: {
+          commentParentId: null,
+          status: CommentStatus.APPROVED,
+        },
+        include: {
+          replies: {
+            where: {
+              status: CommentStatus.APPROVED,
+            },
+          },
+        },
+      },
+    },
   });
+
+  const Data = await prisma.post.count({
+    where: {
+      AND: andQuery,
+    },
+  });
+  return {
+    result,
+    totalData: Data,
+    currentPage: page,
+    limit,
+    totalPage: Math.ceil(Data / limit),
+  };
 };
 
 const getPostByUser = async (authorId: string) => {
@@ -110,7 +142,7 @@ const getPostById = async (postId: string) => {
 
 const createPost = async (
   payLoad: Omit<Post, "id" | "createdAt" | "updatedAt" | "authorId">,
-  userId: string
+  userId: string,
 ) => {
   return await prisma.post.create({
     data: {

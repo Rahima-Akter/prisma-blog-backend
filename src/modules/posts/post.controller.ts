@@ -33,7 +33,7 @@ const getAllPosts = async (req: Request, res: Response) => {
       sortOrder
     );
 
-    if (!result.length) {
+    if (!result) {
       res.status(204).json({
         msg: "There are not data to show!",
       });
