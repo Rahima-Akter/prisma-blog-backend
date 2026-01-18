@@ -38,6 +38,24 @@ const createComment = async (payLoad: {
   });
 };
 
+const updateComment = async (commentId: string, comment: string) => {
+  await prisma.comments.findUniqueOrThrow({
+    where: {
+      id: commentId,
+    },
+  });
+
+  return await prisma.comments.update({
+    where: {
+      id: commentId,
+    },
+    data: {
+      comment: comment,
+    },
+  });
+};
+
 export const commentService = {
   createComment,
+  updateComment,
 };
