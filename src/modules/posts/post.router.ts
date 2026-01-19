@@ -5,17 +5,22 @@ const router = express.Router();
 
 router.get("/", postController.getAllPosts);
 router.get("/:postId", postController.getPostById);
-
 router.get(
   "/:authorId",
   middleware(userRole.ADMIN, userRole.USER),
-  postController.getPostByUser
+  postController.getPostByUser,
 );
 
 router.post(
   "/",
   middleware(userRole.USER, userRole.ADMIN),
-  postController.createPost
+  postController.createPost,
+);
+
+router.patch(
+  "/:postId",
+  middleware(userRole.USER, userRole.ADMIN),
+  postController.updatePost,
 );
 
 export default router;

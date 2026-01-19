@@ -5,6 +5,19 @@ import {
 } from "../../../generated/prisma/client";
 import { PostWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
+import { userRole } from "../../middleware/middleware";
+
+const createPost = async (
+  payLoad: Omit<Post, "id" | "createdAt" | "updatedAt" | "authorId">,
+  userId: string,
+) => {
+  return await prisma.post.create({
+    data: {
+      ...payLoad,
+      authorId: userId,
+    },
+  });
+};
 
 const getAllPosts = async (
   searchQuery: string | undefined,
@@ -82,13 +95,6 @@ const getAllPosts = async (
             where: {
               status: CommentStatus.APPROVED,
             },
-            include: {
-              replies: {
-                where: {
-                  status: CommentStatus.APPROVED,
-                },
-              },
-            },
           },
         },
       },
@@ -110,6 +116,7 @@ const getAllPosts = async (
 };
 
 const getPostByUser = async (authorId: string) => {
+  // console.log({authorId}, 'from service')
   return await prisma.post.findMany({
     where: {
       authorId,
@@ -123,7 +130,26 @@ const getPostById = async (postId: string) => {
       where: { id: postId },
       data: { views: { increment: 1 } },
     });
-    return await tx.post.findUnique({ where: { id: postId } });
+    return await tx.post.findUnique({
+      where: {
+        id: postId,
+      },
+      include: {
+        comments: {
+          where: {
+            commentParentId: null,
+            status: CommentStatus.APPROVED,
+          },
+          include: {
+            replies: {
+              where: {
+                status: CommentStatus.APPROVED,
+              },
+            },
+          },
+        },
+      },
+    });
   });
 
   // const incrementView = await prisma.post.update({
@@ -147,15 +173,33 @@ const getPostById = async (postId: string) => {
   // };
 };
 
-const createPost = async (
-  payLoad: Omit<Post, "id" | "createdAt" | "updatedAt" | "authorId">,
+const updatePost = async (
+  payLoad: {
+    title?: string;
+    content?: string;
+    thumbnail?: string;
+    tags?: string[];
+    status?: PostStatus;
+  },
+  postId: string,
   userId: string,
+  userRole: userRole,
 ) => {
-  return await prisma.post.create({
-    data: {
-      ...payLoad,
-      authorId: userId,
+  // console.log({postId, userId})
+  const result = await prisma.post.findUniqueOrThrow({
+    where: { id: postId },
+    select: { authorId: true },
+  });
+
+  if (userId !== result.authorId && userRole !== "ADMIN") {
+    throw new Error("You are not allowed to update others posts!");
+  }
+
+  return await prisma.post.update({
+    where: {
+      id: postId,
     },
+    data: payLoad,
   });
 };
 
@@ -164,4 +208,5 @@ export const postService = {
   getAllPosts,
   getPostByUser,
   getPostById,
+  updatePost,
 };

@@ -2,6 +2,30 @@ import { Request, Response } from "express";
 import { postService } from "./post.service";
 import { PostStatus } from "../../../generated/prisma/enums";
 import paginationAndSortingHelper from "../../helper/paginationAndSortingHelper";
+import { userRole } from "../../middleware/middleware";
+
+const createPost = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(403).json({
+        success: false,
+        msg: "Unauthorized!",
+      });
+    }
+    const result = await postService.createPost(req.body, user?.id as string);
+    res.status(201).json({
+      msg: "Post created successfully",
+      data: result,
+    });
+  } catch (err) {
+    // console.error(err);
+    res.status(500).json({
+      msg: "Error creating post",
+      error:  err instanceof Error ? err.message : err,
+    });
+  }
+};
 
 const getAllPosts = async (req: Request, res: Response) => {
   try {
@@ -10,14 +34,16 @@ const getAllPosts = async (req: Request, res: Response) => {
       ? req.query.isFeatured === "true"
         ? true
         : req.query.isFeatured === "false"
-        ? false
-        : undefined
+          ? false
+          : undefined
       : undefined;
 
     const status = req.query.status as PostStatus | undefined;
     const tags = req.query.tags ? (req.query.tags as string).split(",") : [];
 
-    const {page, limit, skip, sortBy, sortOrder} = paginationAndSortingHelper(req.query);
+    const { page, limit, skip, sortBy, sortOrder } = paginationAndSortingHelper(
+      req.query,
+    );
 
     // console.log({ isFeatured });
 
@@ -30,7 +56,7 @@ const getAllPosts = async (req: Request, res: Response) => {
       limit,
       skip,
       sortBy,
-      sortOrder
+      sortOrder,
     );
 
     if (!result) {
@@ -46,7 +72,7 @@ const getAllPosts = async (req: Request, res: Response) => {
   } catch (err) {
     res.status(404).json({
       msg: "Faild to fetch posts",
-      error: err,
+      error:  err instanceof Error ? err.message : err,
     });
   }
 };
@@ -77,7 +103,7 @@ const getPostById = async (req: Request, res: Response) => {
   } catch (err) {
     res.status(500).json({
       msg: "Faild to fetch post",
-      error: err,
+      error:  err instanceof Error ? err.message : err,
     });
   }
 };
@@ -85,6 +111,7 @@ const getPostById = async (req: Request, res: Response) => {
 const getPostByUser = async (req: Request, res: Response) => {
   try {
     const { authorId } = req.params;
+    // console.log({authorId}, 'from controller')
 
     if (!authorId) {
       return res.status(403).json({
@@ -97,7 +124,7 @@ const getPostByUser = async (req: Request, res: Response) => {
 
     if (!result.length) {
       return res.status(204).json({
-        msg: "There are not data to show!",
+        msg: "There are no data to show!",
       });
     }
 
@@ -108,30 +135,44 @@ const getPostByUser = async (req: Request, res: Response) => {
   } catch (err) {
     res.status(404).json({
       msg: "Faild to fetch posts",
-      error: err,
+      error:  err instanceof Error ? err.message : err,
     });
   }
 };
 
-const createPost = async (req: Request, res: Response) => {
+const updatePost = async (req: Request, res: Response) => {
   try {
-    const user = req.user;
-    if (!user) {
+    const { postId } = req.params;
+
+    if (!postId) {
       return res.status(403).json({
         success: false,
-        msg: "Unauthorized!",
+        msg: `NO POST FOUND WITH THE POST ID: ${postId!}`,
       });
     }
-    const result = await postService.createPost(req.body, user?.id as string);
-    res.status(201).json({
-      msg: "Post created successfully",
+
+    const result = await postService.updatePost(
+      req.body,
+      postId,
+      req.user?.id as string,
+      req.user?.role as userRole,
+    );
+
+    if (!result) {
+      return res.status(204).json({
+        msg: "There are not data to show!",
+      });
+    }
+
+    res.status(200).json({
+      msg: "Posts updated successfully",
       data: result,
     });
   } catch (err) {
-    // console.error(err);
-    res.status(500).json({
-      msg: "Error creating post",
-      error: err,
+    // console.log({ err });
+    res.status(404).json({
+      msg: "Faild to update post!",
+      error:  err instanceof Error ? err.message : err instanceof Error ? err.message : err,
     });
   }
 };
@@ -141,4 +182,5 @@ export const postController = {
   getAllPosts,
   getPostByUser,
   getPostById,
+  updatePost,
 };
