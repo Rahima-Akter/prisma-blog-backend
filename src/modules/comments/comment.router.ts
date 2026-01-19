@@ -20,4 +20,16 @@ router.patch(
   commentController.updateComentStatus,
 );
 
+router.delete(
+  "/:commentId",
+  middleware(userRole.ADMIN, userRole.USER),
+  commentController.deleteComent,
+);
+
+router.get(
+  "/allComments",
+  middleware(userRole.ADMIN),
+  commentController.getAllComments,
+);
+
 export const commentRouter = router;

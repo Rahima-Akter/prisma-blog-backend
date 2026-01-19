@@ -79,8 +79,52 @@ const updateComentStatus = async (req: Request, res: Response) => {
   }
 };
 
+const deleteComent = async (req: Request, res: Response) => {
+  try {
+    const commentId = req.params.commentId;
+    // console.log({commentId})
+
+    if (!commentId) {
+      return res.status(403).json({
+        success: false,
+        msg: `Comment ID: ${commentId} NOT FOUND!`,
+      });
+    }
+
+    const result = await commentService.deleteComment(commentId);
+    res.status(200).json({
+      msg: "Comment Deleted Successfully",
+      data: result,
+    });
+  } catch (err) {
+    // console.error(err);
+    return res.status(500).json({
+      msg: "Error Deleting Comment",
+      error: err,
+    });
+  }
+};
+
+const getAllComments = async (req: Request, res: Response) => {
+  try {
+    const result = await commentService.getAllComments();
+    res.status(200).json({
+      msg: "Comments Fetched Successfully",
+      data: result,
+    });
+  } catch (err) {
+    // console.error(err);
+    return res.status(500).json({
+      msg: "Error Fetching Comments",
+      error: err,
+    });
+  }
+};
+
 export const commentController = {
   createComment,
   updateComment,
   updateComentStatus,
+  deleteComent,
+  getAllComments
 };

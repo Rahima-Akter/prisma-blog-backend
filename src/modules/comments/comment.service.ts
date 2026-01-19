@@ -81,8 +81,35 @@ const updateComentStatus = async (commentId: string, status: CommentStatus) => {
   });
 };
 
+const deleteComment = async (commentId: string) => {
+  await prisma.comments.findUniqueOrThrow({
+    where: {
+      id: commentId,
+    },
+  });
+
+  return await prisma.comments.delete({
+    where: {
+      id: commentId,
+    },
+    select: {
+      id: true,
+      comment: true,
+      userId: true,
+      postId: true,
+    },
+  });
+};
+
+
+const getAllComments = async () =>{
+  return await prisma.comments.findMany()
+}
+
 export const commentService = {
   createComment,
   updateComment,
   updateComentStatus,
+  deleteComment,
+  getAllComments
 };
