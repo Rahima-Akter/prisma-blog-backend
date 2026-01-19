@@ -22,5 +22,10 @@ router.patch(
   middleware(userRole.USER, userRole.ADMIN),
   postController.updatePost,
 );
+router.patch(
+  "/:postId/isFeatured",
+  middleware(userRole.ADMIN),
+  postController.updatePostIsFeatured,
+);
 
 export default router;

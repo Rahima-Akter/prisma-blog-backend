@@ -22,7 +22,7 @@ const createPost = async (req: Request, res: Response) => {
     // console.error(err);
     res.status(500).json({
       msg: "Error creating post",
-      error:  err instanceof Error ? err.message : err,
+      error: err instanceof Error ? err.message : err,
     });
   }
 };
@@ -72,7 +72,7 @@ const getAllPosts = async (req: Request, res: Response) => {
   } catch (err) {
     res.status(404).json({
       msg: "Faild to fetch posts",
-      error:  err instanceof Error ? err.message : err,
+      error: err instanceof Error ? err.message : err,
     });
   }
 };
@@ -103,7 +103,7 @@ const getPostById = async (req: Request, res: Response) => {
   } catch (err) {
     res.status(500).json({
       msg: "Faild to fetch post",
-      error:  err instanceof Error ? err.message : err,
+      error: err instanceof Error ? err.message : err,
     });
   }
 };
@@ -135,7 +135,7 @@ const getPostByUser = async (req: Request, res: Response) => {
   } catch (err) {
     res.status(404).json({
       msg: "Faild to fetch posts",
-      error:  err instanceof Error ? err.message : err,
+      error: err instanceof Error ? err.message : err,
     });
   }
 };
@@ -172,7 +172,60 @@ const updatePost = async (req: Request, res: Response) => {
     // console.log({ err });
     res.status(404).json({
       msg: "Faild to update post!",
-      error:  err instanceof Error ? err.message : err instanceof Error ? err.message : err,
+      error:
+        err instanceof Error
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : err,
+    });
+  }
+};
+
+const updatePostIsFeatured = async (req: Request, res: Response) => {
+  try {
+    const { postId } = req.params;
+
+    if (!postId) {
+      return res.status(403).json({
+        success: false,
+        msg: `NO POST FOUND WITH THE POST ID: ${postId!}`,
+      });
+    }
+
+    const isFeatured =
+      req.body.isFeatured === true || req.body.isFeatured === "true"
+        ? true
+        : req.body.isFeatured === false || req.body.isFeatured === "false"
+          ? false
+          : undefined;
+
+    const result = await postService.updatePostIsFeatured(
+      isFeatured as boolean,
+      postId,
+      req.user?.role as userRole,
+    );
+
+    // if (!result) {
+    //   return res.status(204).json({
+    //     msg: "There are not data to show!",
+    //   });
+    // }
+
+    res.status(200).json({
+      msg: "Posts updated successfully",
+      data: result,
+    });
+  } catch (err) {
+    // console.log({ err });
+    res.status(404).json({
+      msg: "Faild to update post!",
+      error:
+        err instanceof Error
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : err,
     });
   }
 };
@@ -183,4 +236,5 @@ export const postController = {
   getPostByUser,
   getPostById,
   updatePost,
+  updatePostIsFeatured,
 };

@@ -203,10 +203,46 @@ const updatePost = async (
   });
 };
 
+const updatePostIsFeatured = async (
+  isFeatured: boolean,
+  postId: string,
+  userRole: userRole,
+) => {
+  const result = await prisma.post.findUniqueOrThrow({
+    where: {
+      id: postId,
+    },
+    select: {
+      isFeatured: true,
+    },
+  });
+
+  if (isFeatured !== undefined && isFeatured === result.isFeatured) {
+    throw new Error(`isFeatured is already => ${isFeatured}`);
+  }
+
+  if (userRole !== "ADMIN") {
+    throw new Error("You don't have permission to perform this action!");
+  }
+
+  return await prisma.post.update({
+    where: {
+      id: postId,
+    },
+    data: {isFeatured},
+    select: {
+      id: true,
+      title: true,
+      isFeatured: true,
+    },
+  });
+};
+
 export const postService = {
   createPost,
   getAllPosts,
   getPostByUser,
   getPostById,
   updatePost,
+  updatePostIsFeatured,
 };
