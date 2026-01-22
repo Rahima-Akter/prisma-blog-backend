@@ -81,10 +81,17 @@ const getPostById = async (req: Request, res: Response) => {
   try {
     const { postId } = req.params;
 
+    // if (!postId) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     msg: "Post ID is required",
+    //   });
+    // }
+
     if (!postId) {
-      return res.status(400).json({
+      return res.status(403).json({
         success: false,
-        msg: "Post ID is required",
+        msg: `NO POST FOUND WITH THE POST ID: ${postId!}`,
       });
     }
 
@@ -230,6 +237,40 @@ const updatePostIsFeatured = async (req: Request, res: Response) => {
   }
 };
 
+const deletepost = async (req: Request, res: Response) => {
+  try {
+    const { postId } = req.params;
+
+    if (!postId) {
+      return res.status(403).json({
+        success: false,
+        msg: `NO POST FOUND WITH THE POST ID: ${postId!}`,
+      });
+    }
+
+    const result = await postService.deletepost(
+      postId,
+      req.user?.role as userRole,
+    );
+
+    res.status(200).json({
+      msg: "Posts deleted successfully",
+      data: result,
+    });
+  } catch (err) {
+    // console.log({ err });
+    res.status(404).json({
+      msg: "Faild to delete post!",
+      error:
+        err instanceof Error
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : err,
+    });
+  }
+};
+
 export const postController = {
   createPost,
   getAllPosts,
@@ -237,4 +278,5 @@ export const postController = {
   getPostById,
   updatePost,
   updatePostIsFeatured,
+  deletepost,
 };

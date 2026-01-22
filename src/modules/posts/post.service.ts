@@ -229,11 +229,33 @@ const updatePostIsFeatured = async (
     where: {
       id: postId,
     },
-    data: {isFeatured},
+    data: { isFeatured },
     select: {
       id: true,
       title: true,
       isFeatured: true,
+    },
+  });
+};
+
+const deletepost = async (postId: string, userRole: userRole) => {
+  await prisma.post.findUniqueOrThrow({
+    where: {
+      id: postId,
+    },
+  });
+
+  if (userRole !== "ADMIN") {
+    throw new Error("You are not allowed to delete others posts!");
+  }
+
+  return await prisma.post.delete({
+    where: {
+      id: postId,
+    },
+    select: {
+      id: true,
+      title: true,
     },
   });
 };
@@ -245,4 +267,5 @@ export const postService = {
   getPostById,
   updatePost,
   updatePostIsFeatured,
+  deletepost,
 };

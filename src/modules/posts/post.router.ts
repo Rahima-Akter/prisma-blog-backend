@@ -28,4 +28,10 @@ router.patch(
   postController.updatePostIsFeatured,
 );
 
-export default router;
+router.delete(
+  "/:postId",
+  middleware(userRole.ADMIN, userRole.USER),
+  postController.deletepost,
+);
+
+export const postRouter = router;
