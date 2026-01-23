@@ -36,7 +36,11 @@ const getUserById = async (req: Request, res: Response) => {
     });
   } catch (err) {
     res.status(500).json({
-      err: err instanceof Error ? err.message : "Something went wrong!",
+      err:
+        err instanceof Error
+          ? (err.message.match(/No record was found for a query/)?.[0] ??
+            err.message)
+          : "Something went wrong!",
     });
   }
 };
@@ -89,9 +93,27 @@ const updateUserPassword = async (req: Request, res: Response) => {
   }
 };
 
+const deleteUser = async (req: Request, res: Response) => {
+  try {
+    const requestedUser = req.params.userId ? req.params.userId : undefined;
+
+    const result = await userService.deleteUser(requestedUser as string);
+    res.status(200).json({
+      success: true,
+      msg: "Users deleted successfully",
+      data: result,
+    });
+  } catch (err) {
+    res.status(500).json({
+      err: err instanceof Error ? err.message : "Something went wrong!",
+    });
+  }
+};
+
 export const userController = {
   getAllUser,
   getUserById,
   updateUser,
   updateUserPassword,
+  deleteUser,
 };

@@ -4,7 +4,6 @@ import { prisma } from "../../lib/prisma";
 import { userRole } from "../../middleware/middleware";
 import { hashPassword } from "better-auth/crypto";
 
-
 const getAllUser = () => {
   return prisma.user.findMany({
     select: {
@@ -45,12 +44,16 @@ const getUserById = async (
     throw new Error(" YOU ARE NOT ALLOWED TO ACCESS OTHERS RESOURCES! ");
   }
 
-  await prisma.user.findUniqueOrThrow({
+  const findUser =  await prisma.user.findFirstOrThrow({
     where: {
       id: requestedUser,
     },
     select: { id: true },
   });
+
+  if(!findUser?.id){
+    throw new Error(`user with ID: ${findUser?.id} not found!`)
+  }
 
   return await prisma.user.findUnique({
     where: {
@@ -119,9 +122,9 @@ const updateUserPassword = async (
   loggedInUser: string,
   role: userRole,
   newPassword: string,
-  currentPassword?: string
-) => { 
-    // console.log(auth.api.admin())
+  currentPassword?: string,
+) => {
+  // console.log(auth.api.admin())
   // Check authorization
   if (requestedUser !== loggedInUser && role !== "ADMIN") {
     throw new Error("NOT AUTHORIZED");
@@ -186,11 +189,27 @@ const updateUserPassword = async (
   throw new Error("Invalid password update request");
 };
 
-
+const deleteUser = async (userId: string) => {
+  await prisma.user.findFirstOrThrow({
+    where: {
+      id: userId,
+    },
+  });
+  return await prisma.user.delete({
+    where: {
+      id: userId,
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+};
 
 export const userService = {
   getAllUser,
   getUserById,
   updateUser,
   updateUserPassword,
+  deleteUser,
 };

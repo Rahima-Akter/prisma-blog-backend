@@ -1,3 +1,4 @@
+import { promise, success } from "better-auth/*";
 import {
   CommentStatus,
   Post,
@@ -117,11 +118,35 @@ const getAllPosts = async (
 
 const getPostByUser = async (authorId: string) => {
   // console.log({authorId}, 'from service')
-  return await prisma.post.findMany({
+  const data = await prisma.post.findMany({
     where: {
       authorId,
     },
   });
+  const totalPostCount = await prisma.post.count({
+    where: {
+      authorId,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+  const totalViewsCount = await prisma.post.aggregate({
+    where: {
+      authorId,
+    },
+    _sum: {
+      views: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+  return {
+    data,
+    totalPostCount,
+    totalViewsCount: totalViewsCount._sum.views,
+  };
 };
 
 const getPostById = async (postId: string) => {
@@ -130,7 +155,7 @@ const getPostById = async (postId: string) => {
       where: { id: postId },
       data: { views: { increment: 1 } },
     });
-    return await tx.post.findUnique({
+    const post = await tx.post.findUnique({
       where: {
         id: postId,
       },
@@ -140,16 +165,32 @@ const getPostById = async (postId: string) => {
             commentParentId: null,
             status: CommentStatus.APPROVED,
           },
+          orderBy: {
+            createdAt: "desc",
+          },
           include: {
             replies: {
               where: {
                 status: CommentStatus.APPROVED,
+              },
+              orderBy: {
+                createdAt: "desc",
               },
             },
           },
         },
       },
     });
+    const commentsCount = await tx.comments.count({
+      where: {
+        postId: postId,
+        status: CommentStatus.APPROVED,
+      },
+    });
+    return {
+      post,
+      commentsCount,
+    };
   });
 
   // const incrementView = await prisma.post.update({
@@ -260,6 +301,49 @@ const deletepost = async (postId: string, userRole: userRole) => {
   });
 };
 
+const stats = async () => {
+  return await prisma.$transaction(async (tx) => {
+    const [
+      totalPosts,
+      publlishedPosts,
+      draftPosts,
+      archivedPosts,
+      totalComments,
+      approvedComment,
+      rejectedComment,
+      totalUsers,
+      adminCount,
+      NormalUserCount,
+      totalViews,
+    ] = await Promise.all([
+      await tx.post.count(),
+      await tx.post.count({ where: { status: PostStatus.PUBLISHED } }),
+      await tx.post.count({ where: { status: PostStatus.DRAFT } }),
+      await tx.post.count({ where: { status: PostStatus.ARCHIVED } }),
+      await tx.comments.count(),
+      await tx.comments.count({ where: { status: CommentStatus.APPROVED } }),
+      await tx.comments.count({ where: { status: CommentStatus.REJECT } }),
+      await tx.user.count(),
+      await tx.user.count({ where: { role: userRole.ADMIN } }),
+      await tx.user.count({ where: { role: userRole.USER } }),
+      await tx.post.aggregate({ _sum: { views: true } }),
+    ]);
+    return {
+      totalPosts,
+      publlishedPosts,
+      draftPosts,
+      archivedPosts,
+      totalComments,
+      approvedComment,
+      rejectedComment,
+      totalUsers,
+      adminCount,
+      NormalUserCount,
+      totalViews: totalViews._sum.views,
+    };
+  });
+};
+
 export const postService = {
   createPost,
   getAllPosts,
@@ -268,4 +352,5 @@ export const postService = {
   updatePost,
   updatePostIsFeatured,
   deletepost,
+  stats,
 };

@@ -3,6 +3,7 @@ import { postService } from "./post.service";
 import { PostStatus } from "../../../generated/prisma/enums";
 import paginationAndSortingHelper from "../../helper/paginationAndSortingHelper";
 import { userRole } from "../../middleware/middleware";
+import { success } from "better-auth/*";
 
 const createPost = async (req: Request, res: Response) => {
   try {
@@ -104,6 +105,7 @@ const getPostById = async (req: Request, res: Response) => {
     }
 
     res.status(200).json({
+      success: true,
       msg: "Post fetched successfully",
       data: result,
     });
@@ -129,7 +131,7 @@ const getPostByUser = async (req: Request, res: Response) => {
 
     const result = await postService.getPostByUser(authorId as string);
 
-    if (!result.length) {
+    if (!result.data.length) {
       return res.status(204).json({
         msg: "There are no data to show!",
       });
@@ -271,6 +273,27 @@ const deletepost = async (req: Request, res: Response) => {
   }
 };
 
+const stats = async (req: Request, res: Response) => {
+  try {
+    const result = await postService.stats();
+    res.status(200).json({
+      msg: "Stats fetched successfully",
+      data: result,
+    });
+  } catch (err) {
+    // console.log({ err });
+    res.status(404).json({
+      msg: "Faild to fetch stats!",
+      error:
+        err instanceof Error
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : err,
+    });
+  }
+};
+
 export const postController = {
   createPost,
   getAllPosts,
@@ -279,4 +302,5 @@ export const postController = {
   updatePost,
   updatePostIsFeatured,
   deletepost,
+  stats,
 };
