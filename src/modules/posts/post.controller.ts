@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { postService } from "./post.service";
-import { PostStatus } from "../../../generated/prisma/enums";
+import { Category, PostStatus } from "../../../generated/prisma/enums";
 import paginationAndSortingHelper from "../../helper/paginationAndSortingHelper";
 import { userRole } from "../../middleware/middleware";
 import { success } from "better-auth/*";
@@ -41,6 +41,7 @@ const getAllPosts = async (req: Request, res: Response) => {
 
     const status = req.query.status as PostStatus | undefined;
     const tags = req.query.tags ? (req.query.tags as string).split(",") : [];
+    const { category } = req.query;
 
     const { page, limit, skip, sortBy, sortOrder } = paginationAndSortingHelper(
       req.query,
@@ -53,6 +54,7 @@ const getAllPosts = async (req: Request, res: Response) => {
       tags,
       isFeatured as boolean,
       status,
+      category as Category,
       page,
       limit,
       skip,

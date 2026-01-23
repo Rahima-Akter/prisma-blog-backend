@@ -1,5 +1,6 @@
 import { promise, success } from "better-auth/*";
 import {
+  Category,
   CommentStatus,
   Post,
   PostStatus,
@@ -25,6 +26,7 @@ const getAllPosts = async (
   tags: string[],
   isFeatured: boolean,
   status: PostStatus | undefined,
+  category: Category,
   page: number,
   limit: number,
   skip: number,
@@ -66,6 +68,12 @@ const getAllPosts = async (
   if (status) {
     andQuery.push({
       status,
+    });
+  }
+
+  if (category) {
+    andQuery.push({
+      category,
     });
   }
 

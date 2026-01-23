@@ -4,6 +4,18 @@ enum PostStatus {
   ARCHIVED
 }
 
+enum Category {
+  TECHNOLOGY
+  BUSINESS_AND_CAREER
+  DESIGN_AND_CREATIVITY
+  LIFESTYLE
+  HEALTH_AND_WELLNESS
+  EDUCATION_AND_LEARNING
+  OPINION_AND_STORIES
+  TRENDS_AND_CULTURE
+  OTHER
+}
+
 model Post {
   id         String     @id @default(uuid())
   title      String     @db.VarChar(100)
@@ -12,6 +24,7 @@ model Post {
   isFeatured Boolean    @default(false)
   status     PostStatus @default(PUBLISHED)
   tags       String[]
+  category   Category 
   views      Int        @default(0)
   authorId   String // better auth will provide
   createdAt  DateTime   @default(now())
